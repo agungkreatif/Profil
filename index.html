@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Data Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        button { background: #3ECF8E; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-test { background: red; }
+        .data { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .nama { font-weight: bold; color: #3ECF8E; }
+        #log { background: #ffecec; padding: 10px; margin-top: 10px; border-radius: 8px; color: red; white-space: pre-wrap; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <h2>Form Pendaftaran</h2>
+    
+    <form id="form-data">
+        <input type="text" id="nama" placeholder="Nama" required>
+        <input type="text" id="kelas" placeholder="Kelas" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <button type="submit">Kirim Data</button>
+    </form>
+
+    <button class="btn-test" onclick="testKirim()">KIRIM TEST OTOMATIS</button>
+
+    <hr>
+    <h3>Data Masuk</h3>
+    <div id="list-data">Loading...</div>
+    <h4>Log Error:</h4>
+    <div id="log">Belum ada error</div>
+
+<script>
+    const SUPABASE_URL = 'https://ewualjpestfduixmwezz.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_xaXPztQkdArvlFZmReISJA_CEeoKKvD'
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const logDiv = document.getElementById('log');
+
+    async function kirim(nama, kelas, email) {
+        logDiv.innerText = "Lagi ngirim...";
+        const { data, error } = await supabase.from('Pesan').insert([{ nama, kelas, email }]).select();
+        
+        if (error) {
+            logDiv.innerText = "GAGAL: " + error.message + "\n\n" + JSON.stringify(error, null, 2);
+            alert('Gagal: ' + error.message);
+        } else {
+            logDiv.innerText = "SUKSES!";
+            alert('Berhasil!');
+            loadData();
+        }
+    }
+
+    document.getElementById('form-data').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        kirim(document.getElementById('nama').value, document.getElementById('kelas').value, document.getElementById('email').value);
+    });
+
+    function testKirim() {
+        kirim("Test HP", "12", "test@test.com");
+    }
+
+    async function loadData() {
+        const { data, error } = await supabase.from('Pesan').select('*').order('id', { ascending: false });
+        if (error) { document.getElementById('list-data').innerText = 'Error: ' + error.message; return; }
+        document.getElementById('list-data').innerHTML = data.map(d => `<div class="data"><div class="nama">${d.nama}</div><div>Kelas: ${d.kelas}</div><div>Email: ${d.email}</div></div>`).join('');
+    }
+    loadData();
+</script>
+</body>
+</html>
